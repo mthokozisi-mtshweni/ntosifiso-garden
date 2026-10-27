@@ -173,9 +173,10 @@ export default function HeroScrollVideo() {
     offset: ["start start", "end end"]
   });
 
+  // FIX: Tighter spring for less delay and immediate response
   const smoothProgress = useSpring(scrollYProgress, {
-    damping: 40,
-    stiffness: 60,
+    damping: 25,      // Reduced from 40 for less floaty feel
+    stiffness: 120,   // Increased from 60 to snap to scroll faster
     restDelta: 0.001
   });
 
@@ -195,7 +196,7 @@ export default function HeroScrollVideo() {
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
-          video.pause(); // Pause immediately so it doesn't play like a normal video
+          video.pause(); 
           setIsVideoLoaded(true);
         }).catch(() => {
           console.log("iOS blocked autoplay. Showing fallback image.");
@@ -219,10 +220,11 @@ export default function HeroScrollVideo() {
         const targetProgress = smoothProgress.get();
         const targetTime = targetProgress * video.duration;
         
-        // Smoothly interpolate the current time
         const diff = targetTime - video.currentTime;
+        
+        // FIX: Increased from 0.1 to 0.5 for snappier tracking
         if (Math.abs(diff) > 0.02) {
-          video.currentTime = video.currentTime + diff * 0.1;
+          video.currentTime = video.currentTime + diff * 0.5;
         }
       }
       reqId = requestAnimationFrame(scrubVideo);
