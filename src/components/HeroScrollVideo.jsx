@@ -173,10 +173,9 @@ export default function HeroScrollVideo() {
     offset: ["start start", "end end"]
   });
 
-  // Keep a smooth spring for the text animations, but we will handle the video separately
   const smoothProgress = useSpring(scrollYProgress, {
-    damping: 30,
-    stiffness: 100,
+    damping: 25,
+    stiffness: 120,
     restDelta: 0.001
   });
 
@@ -204,34 +203,42 @@ export default function HeroScrollVideo() {
     }
   }, []);
 
-  // Dedicated, high-performance scrub loop
+  // Optimized Scrub Loop with Decoder Throttling
   useEffect(() => {
     let reqId;
+    let lastUpdateTime = 0;
     const video = videoRef.current;
-    let currentVideoTime = 0; // The "displayed" time we will lerp
+    let currentVideoTime = 0;
 
-    const scrubVideo = () => {
+    const scrubVideo = (timestamp) => {
+      reqId = requestAnimationFrame(scrubVideo);
+
       if (!video || video.readyState < 2 || !isVideoLoaded || prefersReducedMotion) {
-        reqId = requestAnimationFrame(scrubVideo);
         return;
       }
 
-      if (!video.paused) video.pause();
+      // FIX: Throttle updates to ~30 FPS. 
+      // 33ms delay gives the mobile decoder time to breathe and draw the frame.
+      if (timestamp - lastUpdateTime < 33) {
+        return;
+      }
+      lastUpdateTime = timestamp;
 
-      // Read scroll progress directly from the motion value, NOT a stale state
-      const targetProgress = smoothProgress.get(); 
-      const targetTime = targetProgress * video.duration;
+      if (!video.paused) video.pause();
       
-      // LERP: Move 10% of the distance to the target on every frame
-      const diff = targetTime - currentVideoTime;
-      
-      // Only update if the difference is meaningful (tolerance for iOS)
-      if (Math.abs(diff) > 0.04) { 
-        currentVideoTime += diff * 0.1; 
-        video.currentTime = currentVideoTime;
+      // FIX: Don't throw a new seek command if the video is already trying to seek
+      if (video.seeking) {
+        return; 
       }
 
-      reqId = requestAnimationFrame(scrubVideo);
+      const targetProgress = smoothProgress.get();
+      const targetTime = targetProgress * video.duration;
+      const diff = targetTime - currentVideoTime;
+
+      if (Math.abs(diff) > 0.04) { 
+        currentVideoTime += diff * 0.15; // Smooth lerp
+        video.currentTime = currentVideoTime;
+      }
     };
 
     if (isVideoLoaded && !prefersReducedMotion) {
@@ -241,7 +248,6 @@ export default function HeroScrollVideo() {
     return () => cancelAnimationFrame(reqId);
   }, [isVideoLoaded, prefersReducedMotion, smoothProgress]);
 
-  // ... (rest of the JSX remains exactly the same)
   const introVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 1.5, ease: "easeOut", delay: 0.5 } }
