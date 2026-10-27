@@ -173,10 +173,10 @@ export default function HeroScrollVideo() {
     offset: ["start start", "end end"]
   });
 
-  // FIX: Tighter spring for less delay and immediate response
+  // Keep a smooth spring for the text animations, but we will handle the video separately
   const smoothProgress = useSpring(scrollYProgress, {
-    damping: 25,      // Reduced from 40 for less floaty feel
-    stiffness: 120,   // Increased from 60 to snap to scroll faster
+    damping: 30,
+    stiffness: 100,
     restDelta: 0.001
   });
 
@@ -189,14 +189,13 @@ export default function HeroScrollVideo() {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
 
-    // iOS UNLOCK: Force the video to load and unlock, then pause immediately.
     const video = videoRef.current;
     if (video) {
       video.load();
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
-          video.pause(); 
+          video.pause();
           setIsVideoLoaded(true);
         }).catch(() => {
           console.log("iOS blocked autoplay. Showing fallback image.");
@@ -205,28 +204,33 @@ export default function HeroScrollVideo() {
     }
   }, []);
 
-  // Dedicated animation loop strictly for scrubbing
+  // Dedicated, high-performance scrub loop
   useEffect(() => {
     let reqId;
     const video = videoRef.current;
+    let currentVideoTime = 0; // The "displayed" time we will lerp
 
     const scrubVideo = () => {
-      if (video && video.readyState >= 2 && isVideoLoaded && !prefersReducedMotion) {
-        // STRICT ENFORCEMENT: Keep the video paused so it doesn't auto-play
-        if (!video.paused) {
-          video.pause();
-        }
-
-        const targetProgress = smoothProgress.get();
-        const targetTime = targetProgress * video.duration;
-        
-        const diff = targetTime - video.currentTime;
-        
-        // FIX: Increased from 0.1 to 0.5 for snappier tracking
-        if (Math.abs(diff) > 0.02) {
-          video.currentTime = video.currentTime + diff * 0.5;
-        }
+      if (!video || video.readyState < 2 || !isVideoLoaded || prefersReducedMotion) {
+        reqId = requestAnimationFrame(scrubVideo);
+        return;
       }
+
+      if (!video.paused) video.pause();
+
+      // Read scroll progress directly from the motion value, NOT a stale state
+      const targetProgress = smoothProgress.get(); 
+      const targetTime = targetProgress * video.duration;
+      
+      // LERP: Move 10% of the distance to the target on every frame
+      const diff = targetTime - currentVideoTime;
+      
+      // Only update if the difference is meaningful (tolerance for iOS)
+      if (Math.abs(diff) > 0.04) { 
+        currentVideoTime += diff * 0.1; 
+        video.currentTime = currentVideoTime;
+      }
+
       reqId = requestAnimationFrame(scrubVideo);
     };
 
@@ -237,6 +241,7 @@ export default function HeroScrollVideo() {
     return () => cancelAnimationFrame(reqId);
   }, [isVideoLoaded, prefersReducedMotion, smoothProgress]);
 
+  // ... (rest of the JSX remains exactly the same)
   const introVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 1.5, ease: "easeOut", delay: 0.5 } }
