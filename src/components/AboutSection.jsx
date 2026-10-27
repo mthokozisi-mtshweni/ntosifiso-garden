@@ -4,65 +4,33 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Leaf, Users, Sparkles } from 'lucide-react';
 import '../styles/layout.css';
 
-// 1. Define your media array (Mix of images and videos)
-// src/components/AboutSection.jsx
+// IMPORT THE IMAGES HERE
+import mainImage from '../assets/images/mainImage.png';
+import topImage from '../assets/images/TopImage.png';
+import bottomImage from '../assets/images/bottomImage.png';
+import pic3 from '../assets/images/pic3.jpg'; // Using one of your other pics for the slider
 
+// 1. Define your media array (Mix of images and videos)
 const mediaItems = [
-  {
-    type: 'image',
-    src: 'src/assets/images/pic3.jpg',
-  },
-  {
-    type: 'video',
-    src: "/vid1.mp4", 
-  },
-  {
-    type: 'image',
-    src: 'src/assets/images/pic6.jpg',
-  },
-  {
-    type: 'video',
-    src: "/vid2.mp4", 
-  },
-  {
-    type: 'video',
-    src: "/vid3.mp4", 
-  },
-  {
-    type: 'image',
-    src: 'src/assets/images/pic4.jpg',
-  },
-  {
-    type: 'video',
-    src: "/vid4.mp4", 
-  },
-  {
-    type: 'video',
-    src: "/vid5.mp4", 
-  },
-  {
-    // If you still want to keep the other video, include it here
-    type: 'video',
-    src: "/about (2).mp4", 
-  }
+  { type: 'image', src: mainImage },
+  { type: 'video', src: "/vid1.mp4" }, // Videos stay in public folder
+  { type: 'image', src: pic3 },
+  { type: 'video', src: "/vid2.mp4" }
 ];
 
 export default function AboutSection() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  
-  // Static decorative images for the collage
-  const topImage = "src/assets/images/TopImage.png";
-  const bottomImage = "src/assets/images/bottomImage.png";
 
   // 2. Auto-advance the slider every 5 seconds
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % mediaItems.length);
-    }, 5000); // 5000ms = 5 seconds
+    }, 5000);
 
-    return () => clearInterval(timer); // Cleanup on unmount
+    return () => clearInterval(timer);
   }, []);
 
+  
   return (
     <section id="about" className="about-section">
       <div className="container about-container">
