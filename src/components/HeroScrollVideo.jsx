@@ -157,7 +157,7 @@
 
 // src/components/HeroScrollVideo.jsx
 import { useEffect, useRef, useState } from 'react';
-import { motion, useScroll, useSpring, useTransform, useAnimationFrame } from 'framer-motion';
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { ArrowDown } from 'lucide-react';
 import '../styles/layout.css';
 
@@ -196,34 +196,55 @@ export default function HeroScrollVideo() {
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
-          // Video successfully started playing (unlocked)
-          video.pause(); // Pause it immediately so we can control it with scroll
+          video.pause(); // Pause immediately after unlocking
           setIsVideoLoaded(true);
         }).catch(() => {
-          // Autoplay was prevented (e.g., Low Power Mode is on)
-          // We keep isVideoLoaded false so the fallback image shows
           console.log("iOS blocked autoplay. Showing fallback image.");
         });
       }
     }
   }, []);
 
-  // Only run the scroll scrubbing if the video is actually loaded and ready
-  useAnimationFrame(() => {
+  // Dedicated animation loop for video scrubbing
+  useEffect(() => {
+    let reqId;
     const video = videoRef.current;
-    // readyState >= 2 means the video has enough data to start scrubbing
-    if (!video || video.readyState < 2 || !isVideoLoaded || prefersReducedMotion) return;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-    const targetProgress = smoothProgress.get();
-    const targetTime = targetProgress * video.duration;
-    
-    const currentTime = video.currentTime;
-    const diff = targetTime - currentTime;
+    const scrubVideo = () => {
+      // readyState >= 2 means the video has enough data to render the frame
+      if (video && video.readyState >= 2 && isVideoLoaded && !prefersReducedMotion) {
+        const targetProgress = smoothProgress.get();
+        const targetTime = targetProgress * video.duration;
+        
+        if (isIOS) {
+          // iOS SPECIFIC HACK: 
+          // If we just change currentTime, iOS Safari ignores it because the video is paused.
+          // We must trigger a micro play/pause to force the browser to render the new frame.
+          if (Math.abs(video.currentTime - targetTime) > 0.05) {
+            video.currentTime = targetTime;
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+              playPromise.then(() => video.pause()).catch(() => {});
+            }
+          }
+        } else {
+          // Smooth interpolation for desktop and Android
+          const diff = targetTime - video.currentTime;
+          if (Math.abs(diff) > 0.02) {
+            video.currentTime = video.currentTime + diff * 0.1;
+          }
+        }
+      }
+      reqId = requestAnimationFrame(scrubVideo);
+    };
 
-    if (Math.abs(diff) > 0.02) {
-      video.currentTime = currentTime + diff * 0.05;
+    if (isVideoLoaded && !prefersReducedMotion) {
+      reqId = requestAnimationFrame(scrubVideo);
     }
-  });
+
+    return () => cancelAnimationFrame(reqId);
+  }, [isVideoLoaded, prefersReducedMotion, smoothProgress]);
 
   const introVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -241,7 +262,7 @@ export default function HeroScrollVideo() {
           poster={fallbackImage}
           muted
           playsInline
-          webkit-playsinline="true" // Extra attribute specifically for older iPhones
+          webkit-playsinline="true"
           preload="auto"
           onLoadedMetadata={() => setIsVideoLoaded(true)}
           onError={(e) => {
