@@ -23,7 +23,7 @@ export const allGalleryImages = [
   { type: 'image', src: pic4, alt: "Celebration" },
   { type: 'image', src: pic6, alt: "Garden greenery" },
 
-  // --- Videos (These stay in the public folder) ---
+  // --- Videos (Notice: No "/public/" in the path) ---
   { type: 'video', src: "/vid1.mp4", alt: "Venue walk-through" },
   { type: 'video', src: "/vid2.mp4", alt: "Event highlights" },
   { type: 'video', src: "/vid3.mp4", alt: "Scenery" },
