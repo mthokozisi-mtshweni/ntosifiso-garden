@@ -154,7 +154,6 @@
 //   );
 // }
 
-
 // src/components/HeroScrollVideo.jsx
 import { useEffect, useRef, useState } from 'react';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
@@ -189,14 +188,14 @@ export default function HeroScrollVideo() {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
 
-    // iOS UNLOCK HACK: Force iOS to decode the first frame
+    // iOS UNLOCK: Force the video to load and unlock, then pause immediately.
     const video = videoRef.current;
     if (video) {
       video.load();
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
-          video.pause(); // Pause immediately after unlocking
+          video.pause(); // Pause immediately so it doesn't play like a normal video
           setIsVideoLoaded(true);
         }).catch(() => {
           console.log("iOS blocked autoplay. Showing fallback image.");
@@ -205,35 +204,25 @@ export default function HeroScrollVideo() {
     }
   }, []);
 
-  // Dedicated animation loop for video scrubbing
+  // Dedicated animation loop strictly for scrubbing
   useEffect(() => {
     let reqId;
     const video = videoRef.current;
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
     const scrubVideo = () => {
-      // readyState >= 2 means the video has enough data to render the frame
       if (video && video.readyState >= 2 && isVideoLoaded && !prefersReducedMotion) {
+        // STRICT ENFORCEMENT: Keep the video paused so it doesn't auto-play
+        if (!video.paused) {
+          video.pause();
+        }
+
         const targetProgress = smoothProgress.get();
         const targetTime = targetProgress * video.duration;
         
-        if (isIOS) {
-          // iOS SPECIFIC HACK: 
-          // If we just change currentTime, iOS Safari ignores it because the video is paused.
-          // We must trigger a micro play/pause to force the browser to render the new frame.
-          if (Math.abs(video.currentTime - targetTime) > 0.05) {
-            video.currentTime = targetTime;
-            const playPromise = video.play();
-            if (playPromise !== undefined) {
-              playPromise.then(() => video.pause()).catch(() => {});
-            }
-          }
-        } else {
-          // Smooth interpolation for desktop and Android
-          const diff = targetTime - video.currentTime;
-          if (Math.abs(diff) > 0.02) {
-            video.currentTime = video.currentTime + diff * 0.1;
-          }
+        // Smoothly interpolate the current time
+        const diff = targetTime - video.currentTime;
+        if (Math.abs(diff) > 0.02) {
+          video.currentTime = video.currentTime + diff * 0.1;
         }
       }
       reqId = requestAnimationFrame(scrubVideo);
