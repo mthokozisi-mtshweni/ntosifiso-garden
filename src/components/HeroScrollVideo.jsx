@@ -166,7 +166,8 @@ export default function HeroScrollVideo() {
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-  const fallbackImage = "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=2200&q=85";
+  const fallbackImage = "src/assets/images/fallBack.png";
+
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
