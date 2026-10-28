@@ -21,7 +21,7 @@ export default function FloatingSocial() {
 
   const socials = [
     { id: 'whatsapp', icon: <WhatsAppIcon />, url: `https://wa.me/${venueInfo.whatsapp}`, color: '#25D366' },
-    { id: 'tiktok', icon: <TikTokIcon />, url: '#!', color: '#000000' },
+    { id: 'tiktok', icon: <TikTokIcon />, url: venueInfo.socials.tiktok, color: '#000000' },
     { id: 'facebook', icon: <FacebookIcon />, url: '#!', color: '#1877F2' },
   ];
 

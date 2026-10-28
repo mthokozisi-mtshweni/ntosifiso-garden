@@ -2512,3 +2512,45 @@ body {
     margin: 0 1rem;
   }
 }
+
+/* ── FIX FOR IOS DATE INPUT ── */
+.date-input-wrapper {
+  position: relative;
+}
+
+/* Hides the native "dd/mm/yyyy" text when the input is empty */
+input[type="date"].empty-date {
+  color: transparent !important;
+}
+
+/* Ensures the text is visible (dark) when a date is selected */
+input[type="date"]:not(.empty-date) {
+  color: var(--color-text) !important;
+}
+
+/* The custom placeholder overlay */
+.custom-date-placeholder {
+  position: absolute;
+  left: 3rem; /* Aligns it next to the calendar icon */
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-light);
+  pointer-events: none; /* Crucial: Lets the user click through it to open the calendar */
+  font-size: 0.95rem;
+}
+
+/* Ensure the icon stays on top and clickable */
+.date-input-wrapper .input-icon {
+  z-index: 10;
+}
+
+/* Hide the default browser calendar icon so only the Lucide icon shows */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+}

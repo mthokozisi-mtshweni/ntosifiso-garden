@@ -138,7 +138,7 @@ export default function ContactSection() {
               <FacebookIcon />
               <span>Facebook</span>
             </a>
-            <a href="#!" className="social-box">
+            <a href={venueInfo.socials.tiktok} target="_blank" rel="noopener noreferrer" className="social-box">
               <TikTokIcon />
               <span>TikTok</span>
             </a>

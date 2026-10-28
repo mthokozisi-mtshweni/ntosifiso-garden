@@ -124,23 +124,23 @@ export default function EnquirySection() {
             </div>
 
                       <div className="form-row">
-              <div className="input-group">
+                    <div className="input-group">
                 <label>Event Date *</label>
-                <div className="input-with-icon">
+                <div className="input-with-icon date-input-wrapper">
                   <Calendar size={18} className="input-icon" />
                   <input 
-                    type={formData.date ? "date" : "text"}
+                    type="date"
                     name="date" 
                     min={today} 
                     required 
                     value={formData.date} 
                     onChange={handleChange}
-                    placeholder="Choose the event date"
-                    onFocus={(e) => (e.target.type = "date")}
-                    onBlur={(e) => {
-                      if (!e.target.value) e.target.type = "text";
-                    }}
+                    className={!formData.date ? "empty-date" : ""}
                   />
+                  {/* Custom placeholder that disappears when a date is selected */}
+                  {!formData.date && (
+                    <span className="custom-date-placeholder">Choose the event date</span>
+                  )}
                 </div>
               </div>
               <div className="input-group">
