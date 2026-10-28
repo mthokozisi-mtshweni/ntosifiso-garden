@@ -44,7 +44,7 @@ body {
   align-items: center;
   gap: 0.75rem; /* Space between logo and text */
   font-family: var(--font-heading);
-  font-size: .5rem;
+  font-size: .9rem;
   font-weight: 600;
   color: var(--color-white);
   transition: color 0.3s ease;
@@ -670,7 +670,6 @@ body {
   color: var(--color-primary);
 }
 
-/* ── Minimalist Pricing Card ── */
 .premium-pricing-card {
   background-color: var(--color-primary); 
   padding: 4rem 3.5rem; /* Increased padding for breathing room */
@@ -845,6 +844,10 @@ body {
 
   .facilities-grid {
     grid-template-columns: 1fr;
+  }
+
+  .navbar-logo{
+    font-size: 0.7rem;
   }
 }
 
