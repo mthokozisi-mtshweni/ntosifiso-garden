@@ -4,7 +4,7 @@ import { MapPin, Phone, Mail, Clock, ArrowRight } from 'lucide-react';
 import { venueInfo } from '../data/venueInfo';
 import '../styles/layout.css';
 
-// Simple SVG icons to avoid external dependencies
+// Simple SVG icons
 const InstagramIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></svg>;
 const FacebookIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>;
 const TikTokIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" /></svg>;
@@ -130,19 +130,19 @@ export default function ContactSection() {
         >
           <h4 className="socials-title">Follow Us</h4>
           <div className="socials-grid">
-            <a href="#!" className="social-box">
+            <a href={venueInfo.socials.instagram} target="_blank" rel="noopener noreferrer" className="social-box">
               <InstagramIcon />
               <span>Instagram</span>
             </a>
-            <a href="#!" className="social-box">
+            <a href={venueInfo.socials.facebook} target="_blank" rel="noopener noreferrer" className="social-box">
               <FacebookIcon />
               <span>Facebook</span>
             </a>
-            <a href={venueInfo.socials.tiktok} target="_blank" rel="noopener noreferrer" className="social-box">
+                        <a href="https://www.tiktok.com/@ntosifisogarden946" target="_blank" rel="noopener noreferrer" className="social-box">
               <TikTokIcon />
               <span>TikTok</span>
             </a>
-            <a href={`https://wa.me/${venueInfo.whatsapp}`} className="social-box">
+            <a href={`https://wa.me/${venueInfo.whatsapp}`} target="_blank" rel="noopener noreferrer" className="social-box">
               <WhatsAppIcon />
               <span>WhatsApp</span>
             </a>
