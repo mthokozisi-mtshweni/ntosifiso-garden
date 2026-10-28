@@ -4,99 +4,87 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, Mail, Phone, Calendar, Users, Send, CheckCircle, X 
 } from 'lucide-react';
-import emailjs from '@emailjs/browser';
 import { venueInfo } from '../data/venueInfo';
 import '../styles/layout.css';
 
 export default function EnquirySection() {
   const [formData, setFormData] = useState({
-    name: '', phone: '', email: '', date: '', guests: '', eventType: '', notes: ''
+    name: '', email: '', phone: '', eventType: '', date: '', guests: '', notes: ''
   });
 
-  // Modal & Sending States
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const today = new Date().toISOString().split('T')[0];
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const today = new Date().toISOString().split('T')[0];
-
-  // 1. Open the popup when user clicks Submit
   const handleOpenConfirm = (e) => {
     e.preventDefault();
     setShowConfirm(true);
   };
 
-  // 2. Actually send the email when user clicks "Yes, Send" in the popup
- const handleSendEmail = (e) => {
+  const handleSendEmail = async (e) => {
     e.preventDefault();
     setIsSending(true);
 
-    const templateParams = {
-  name: formData.name,
-  email: formData.email,
-  phone: formData.phone,
-  event_type: formData.eventType, // <-- Notice the underscore
-  date: formData.date,
-  guests: formData.guests,
-  notes: formData.notes || 'None provided',
-};
+    try {
+      // ⚠️ REPLACE THE EMAIL BELOW WITH THE VENUE'S REAL EMAIL ADDRESS
+      const destinationEmail = "mthosbudah03@gmail.com"; 
 
-    // REPLACE THESE WITH YOUR ACTUAL EMAILJS CREDENTIALS
-    emailjs.send(
-      'service_ynmci2m', 
-      'template_jmpo7xf', 
-      templateParams, 
-      'J-Na_4AEgSOFeeZaf'
-    )
-    .then(() => {
+      const response = await fetch(`https://formsubmit.co/ajax/${destinationEmail}`, {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          _subject: `[Venue Enquiry] ${formData.eventType} - ${formData.name}`,
+          Name: formData.name,
+          Email: formData.email,
+          Phone: formData.phone,
+          "Event Type": formData.eventType,
+          "Preferred Date": formData.date,
+          Guests: formData.guests,
+          Notes: formData.notes || 'None provided',
+        })
+      });
+
+      if (response.ok) {
+        setIsSending(false);
+        setIsSuccess(true);
+        
+        setTimeout(() => {
+          setShowConfirm(false);
+          setIsSuccess(false);
+          setFormData({ name: '', email: '', phone: '', eventType: '', date: '', guests: '', notes: '' });
+        }, 5000);
+      } else {
+        throw new Error('Failed to send');
+      }
+    } catch (error) {
+      console.error(error);
       setIsSending(false);
-      setIsSuccess(true);
-      
-      // Auto close the modal after 4 seconds
-     setTimeout(() => {
-        setShowConfirm(false);
-        setIsSuccess(false);
-        setFormData({ name: '', phone: '', email: '', date: '', guests: '', eventType: '', notes: '' });
-      }, 4000);
-    })
-    .catch((error) => {
-      console.error('Email failed to send:', error);
-      // Changed this to show you the actual error on screen so you can debug faster
-      alert(`Failed to send: ${error.text || 'Check your EmailJS settings.'}`);
-      setIsSending(false);
-    });
+      alert("There was an issue sending your enquiry. Please try again.");
+    }
   };
 
   return (
     <section id="enquiry" className="enquiry-section-dark">
       <div className="container">
         
-        <motion.div 
-          className="enquiry-header text-center"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
+        <motion.div className="enquiry-header text-center" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
           <span className="section-label text-gold">Book Your Event</span>
           <h2 className="section-title text-white">Let's Plan Your Event</h2>
-          <p className="enquiry-subtitle">
-            Fill in your details and we'll get back to you with a personalised quote and availability.
-          </p>
+          <p className="enquiry-subtitle">Fill in your details and we'll get back to you with a personalised quote.</p>
         </motion.div>
 
-        <motion.div 
-          className="enquiry-form-card"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-        >
+        <motion.div className="enquiry-form-card" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.2 }}>
           <form onSubmit={handleOpenConfirm} className="modern-form">
+            
             <div className="form-row">
               <div className="input-group">
                 <label>Full Name *</label>
@@ -135,19 +123,31 @@ export default function EnquirySection() {
               </div>
             </div>
 
-            <div className="form-row">
+                      <div className="form-row">
               <div className="input-group">
-                <label>Preferred Date *</label>
+                <label>Event Date *</label>
                 <div className="input-with-icon">
                   <Calendar size={18} className="input-icon" />
-                  <input type="date" name="date" min={today} required value={formData.date} onChange={handleChange} />
+                  <input 
+                    type={formData.date ? "date" : "text"}
+                    name="date" 
+                    min={today} 
+                    required 
+                    value={formData.date} 
+                    onChange={handleChange}
+                    placeholder="Choose the event date"
+                    onFocus={(e) => (e.target.type = "date")}
+                    onBlur={(e) => {
+                      if (!e.target.value) e.target.type = "text";
+                    }}
+                  />
                 </div>
               </div>
               <div className="input-group">
                 <label>Estimated Guests *</label>
                 <div className="input-with-icon">
                   <Users size={18} className="input-icon" />
-                  <input type="number" name="guests" required placeholder="e.g. 50" value={formData.guests} onChange={handleChange} />
+                  <input type="number" name="guests" min="1" required placeholder="e.g. 50" value={formData.guests} onChange={handleChange} />
                 </div>
               </div>
             </div>
@@ -160,28 +160,14 @@ export default function EnquirySection() {
             <button type="submit" className="btn btn-gold full-width submit-btn">
               <Send size={18} /> Send Enquiry
             </button>
-            
-            <p className="form-disclaimer">
-              * Bookings are only confirmed upon receipt of a deposit and written confirmation from Ntosifiso Garden.
-            </p>
           </form>
         </motion.div>
 
         {/* ── CONFIRMATION POPUP MODAL ── */}
         <AnimatePresence>
           {showConfirm && (
-            <motion.div 
-              className="modal-overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <motion.div 
-                className="modal-content"
-                initial={{ scale: 0.9, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.9, y: 20 }}
-              >
+            <motion.div className="modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <motion.div className="modal-content" initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}>
                 {!isSuccess ? (
                   <>
                     <button className="modal-close" onClick={() => setShowConfirm(false)} disabled={isSending}>
@@ -191,19 +177,11 @@ export default function EnquirySection() {
                     <p>Are you sure you want to send this event enquiry to Ntosifiso Garden?</p>
                     
                     <div className="modal-actions">
-                      <button 
-                        className="btn btn-outline-dark" 
-                        onClick={() => setShowConfirm(false)}
-                        disabled={isSending}
-                      >
+                      <button className="btn btn-outline-dark" onClick={() => setShowConfirm(false)} disabled={isSending}>
                         Cancel
                       </button>
-                      <button 
-                        className="btn btn-gold" 
-                        onClick={handleSendEmail}
-                        disabled={isSending}
-                      >
-                        {isSending ? 'Sending...' : 'Yes, Send Enquiry'}
+                      <button className="btn btn-gold" onClick={handleSendEmail} disabled={isSending}>
+                        {isSending ? 'Sending...' : 'Yes, Send'}
                       </button>
                     </div>
                   </>
